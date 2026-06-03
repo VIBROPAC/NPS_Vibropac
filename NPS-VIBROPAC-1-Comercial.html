@@ -414,7 +414,7 @@ async function submitForm(){
   btn.disabled = true;
 
   try {
-    var res = await fetch('https://defaultffe56d15c2f646e78dee5d98487770.04.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/a5de5539d2874ee89bd501f0dacb198e/triggers/manual/paths/invoke?api-version=1', {
+    var res = await fetch('https://defaultffe56d15c2f646e78dee5d98487770.04.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/a5de5539d2874ee89bd501f0dacb198e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=N-ubiP4EJzBBd46NTst08OXKnqdwxFYqJlQu_gM7aOo', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify(payload),
