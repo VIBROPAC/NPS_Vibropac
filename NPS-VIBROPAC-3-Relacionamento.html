@@ -395,39 +395,33 @@ async function submitForm(){
   var comentario = Object.values(fd.open).filter(Boolean).join(' | ');
   var vendedor = fd.identification.vendedor||fd.identification.responsavel||fd.identification.unidade||'—';
   var projeto = fd.identification.projeto||fd.identification.tipo||fd.identification.tempo||'—';
+  var data = now.toLocaleDateString('pt-BR');
+  var mes = meses[now.getMonth()];
+  var ano = String(now.getFullYear());
 
-  var payload = {
-    Data: now.toLocaleDateString('pt-BR'),
-    Cliente: fd.identification.cliente||'',
-    Projeto: projeto,
-    Fase: FORM_FASE,
-    Vendedor: vendedor,
-    NotaNPS: fd.npsScore,
-    Classificacao: scoreLabel,
-    Comentario: comentario,
-    Mes: meses[now.getMonth()],
-    Ano: String(now.getFullYear()),
-  };
+  // Build email body with clear markers for Power Automate to parse
+  var body = [
+    'NPS_DATA:' + data,
+    'NPS_CLIENTE:' + (fd.identification.cliente||''),
+    'NPS_PROJETO:' + projeto,
+    'NPS_FASE:' + FORM_FASE,
+    'NPS_VENDEDOR:' + vendedor,
+    'NPS_NOTA:' + fd.npsScore,
+    'NPS_CLASSIFICACAO:' + scoreLabel,
+    'NPS_COMENTARIO:' + comentario,
+    'NPS_MES:' + mes,
+    'NPS_ANO:' + ano,
+  ].join('\n');
 
-  var btn = document.getElementById('btn-next');
-  btn.textContent = 'Enviando...';
-  btn.disabled = true;
+  var mailto = 'mailto:cselman@vibropac.com.br'
+    + '?subject=' + encodeURIComponent('NPS_VIBROPAC | ' + FORM_FASE + ' | ' + (fd.identification.cliente||''))
+    + '&body=' + encodeURIComponent(body);
 
-  try {
-    var res = await fetch('https://defaultffe56d15c2f646e78dee5d98487770.04.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/a5de5539d2874ee89bd501f0dacb198e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=N-ubiP4EJzBBd46NTst08OXKnqdwxFYqJlQu_gM7aOo', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(payload),
-    });
-    showView('success');
-  } catch(err) {
-    // Power Automate pode retornar CORS mas ainda gravar — mostra sucesso
-    console.warn('PA:', err.message);
-    showView('success');
-  } finally {
-    btn.textContent = 'Enviar avaliação ✓';
-    btn.disabled = false;
-  }
+  // Open email client
+  window.location.href = mailto;
+
+  // Show success after short delay
+  setTimeout(function(){ showView('success'); }, 1500);
 }
 
 function renderDashboard(){
