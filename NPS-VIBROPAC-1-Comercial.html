@@ -395,33 +395,40 @@ async function submitForm(){
   var comentario = Object.values(fd.open).filter(Boolean).join(' | ');
   var vendedor = fd.identification.vendedor||fd.identification.responsavel||fd.identification.unidade||'—';
   var projeto = fd.identification.projeto||fd.identification.tipo||fd.identification.tempo||'—';
-  var data = now.toLocaleDateString('pt-BR');
-  var mes = meses[now.getMonth()];
-  var ano = String(now.getFullYear());
 
-  // Build email body with clear markers for Power Automate to parse
-  var body = [
-    'NPS_DATA:' + data,
-    'NPS_CLIENTE:' + (fd.identification.cliente||''),
-    'NPS_PROJETO:' + projeto,
-    'NPS_FASE:' + FORM_FASE,
-    'NPS_VENDEDOR:' + vendedor,
-    'NPS_NOTA:' + fd.npsScore,
-    'NPS_CLASSIFICACAO:' + scoreLabel,
-    'NPS_COMENTARIO:' + comentario,
-    'NPS_MES:' + mes,
-    'NPS_ANO:' + ano,
-  ].join('\n');
+  var payload = {
+    Data:          now.toLocaleDateString('pt-BR'),
+    Cliente:       fd.identification.cliente||'',
+    Projeto:       projeto,
+    Fase:          FORM_FASE,
+    Vendedor:      vendedor,
+    NotaNPS:       fd.npsScore,
+    Classificacao: scoreLabel,
+    Comentario:    comentario,
+    Mes:           meses[now.getMonth()],
+    Ano:           String(now.getFullYear()),
+  };
 
-  var mailto = 'mailto:cselman@vibropac.com.br'
-    + '?subject=' + encodeURIComponent('NPS_VIBROPAC | ' + FORM_FASE + ' | ' + (fd.identification.cliente||''))
-    + '&body=' + encodeURIComponent(body);
+  var btn = document.getElementById('btn-next');
+  btn.textContent = 'Enviando...';
+  btn.disabled = true;
 
-  // Open email client
-  window.location.href = mailto;
-
-  // Show success after short delay
-  setTimeout(function(){ showView('success'); }, 1500);
+  try {
+    // Google Apps Script requires no-cors mode
+    await fetch('https://script.google.com/macros/s/AKfycbwGixUDneKNAlxHvBewr_VmkzmV4aSD0GVMe9RLEcY5S397vC9JWjj4STST6phutUkGmQ/exec', {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    });
+    showView('success');
+  } catch(err) {
+    console.warn('Erro:', err.message);
+    showView('success');
+  } finally {
+    btn.textContent = 'Enviar avaliação ✓';
+    btn.disabled = false;
+  }
 }
 
 function renderDashboard(){
